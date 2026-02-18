@@ -23,8 +23,10 @@ npm install
 Create a .env file:
 ```bash
 JELLYFIN_URL=http://your-ip:8096
-JELLYFIN_API_KEY=your_key
-JUNK_REGEX=/(\[.*?\]|\(.*?\)|1080p|720p|WEB-DL|x264|x265)/gi
+JELLYFIN_API_KEY=your_jellyfin_key
+TMDB_API_KEY=your_tmdb_key
+TMDB_LANG=de-DE #en-US
+JUNK_KEYWORDS=/(\[.*?\]|\(.*?\)|1080p|720p|WEB-DL|x264|x265)/gi
 PORT=3000
 ```
 
