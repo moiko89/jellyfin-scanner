@@ -17,6 +17,7 @@ A lightweight Node.js application to quickly trigger library scans on your Jelly
 git clone https://github.com/moiko89/jellyfin-scanner.git
 cd jellyfin-scanner
 npm install
+npm install express axios dotenv
 ```
 
 ## Configuration
