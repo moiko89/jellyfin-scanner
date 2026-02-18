@@ -13,20 +13,27 @@ A lightweight Node.js application to quickly trigger library scans on your Jelly
 - A Jellyfin API Key
 
 ## Installation
-1. git clone https://github.com/moiko89/jellyfin-scanner.git
-2. cd jellyfin-scanner
-3. npm install
+```bash
+git clone https://github.com/moiko89/jellyfin-scanner.git
+cd jellyfin-scanner
+npm install
+```
 
 ## Configuration
 Create a .env file:
+```bash
 JELLYFIN_URL=http://your-ip:8096
 JELLYFIN_API_KEY=your_key
 JUNK_REGEX=/(\[.*?\]|\(.*?\)|1080p|720p|WEB-DL|x264|x265)/gi
 PORT=3000
+```
 
 ## Usage
 Start with:
+```bash
 node index.js
-
+```
 Or with PM2:
+```bash
 pm2 start index.js --name "jellyfin-scanner"
+```
