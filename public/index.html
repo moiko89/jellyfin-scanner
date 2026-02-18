@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JellyScanner Ultimate</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; text-align: center; padding: 0; margin: 0; background: #121212; color: #e0e0e0; }
+        
+        /* Header */
+        header { padding: 15px; background: #1f1f1f; border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: center; gap: 10px;}
+        h1 { margin: 0; font-size: 1.2rem; }
+
+        /* Result Box (for Scanner/Check) */
+        #result-container { padding: 10px 20px; }
+        #result { padding: 15px; border-radius: 8px; font-weight: bold; font-size: 1.1em; min-height: 24px; transition: all 0.3s; }
+        .neutral { background-color: #333; color: #aaa; }
+        .success { background-color: #1e4620; color: #4ade80; border: 1px solid #28a745; box-shadow: 0 0 15px rgba(40, 167, 69, 0.2); }
+        .missing { background-color: #5c1e23; color: #f87171; border: 1px solid #dc3545; box-shadow: 0 0 15px rgba(220, 53, 69, 0.2); }
+
+        /* Tabs */
+        .tabs { display: flex; justify-content: center; margin: 10px 0; padding: 0 10px; }
+        .tab-btn { flex: 1; padding: 12px 5px; background: #2c2c2c; border: none; color: #888; font-size: 0.9rem; cursor: pointer; border-bottom: 3px solid transparent; }
+        .tab-btn:first-child { border-radius: 8px 0 0 8px; }
+        .tab-btn:last-child { border-radius: 0 8px 8px 0; }
+        .tab-btn.active { background: #3a3a3a; color: #fff; border-bottom: 3px solid #007bff; }
+        
+        .tab-content { display: none; padding: 0 15px; padding-bottom: 50px; }
+        .tab-content.active { display: block; }
+
+        /* TAB 1: Video / Scanner */
+        .scanner-wrapper { position: relative; width: 100%; max-width: 500px; margin: 0 auto; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid #444; }
+        video { width: 100%; height: auto; display: block; }
+        .scan-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70%; height: 100px; border: 2px solid rgba(255,255,255,0.5); box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); pointer-events: none; z-index: 10; }
+        
+        .camera-controls { background: #222; padding: 15px; margin: -5px auto 0 auto; border-radius: 0 0 12px 12px; max-width: 500px; border: 1px solid #444; border-top: none; }
+        select.cam-select { width: 100%; padding: 10px; margin-bottom: 10px; background: #333; color: white; border: 1px solid #555; border-radius: 5px; }
+        .zoom-control { display: flex; align-items: center; gap: 10px; }
+        input[type=range] { flex-grow: 1; accent-color: #007bff; height: 25px; }
+        
+        /* TAB 2: Manual */
+        .input-group { margin-bottom: 25px; text-align: left; max-width: 400px; margin-left: auto; margin-right: auto; margin-top: 20px;}
+        label { display: block; margin-bottom: 8px; color: #ccc; font-size: 0.9rem; }
+        input[type=text], input[type=search] { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #444; background: #222; color: white; font-size: 1rem; box-sizing: border-box; }
+        button.action-btn { width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; border: none; background: #007bff; color: white; font-size: 1rem; font-weight: bold; cursor: pointer; }
+        
+        /* TAB 3: Library Results */
+        .lib-result-list { max-width: 500px; margin: 20px auto; text-align: left; }
+        .lib-item { background: #2a2a2a; border-bottom: 1px solid #444; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .lib-item:first-child { border-radius: 8px 8px 0 0; }
+        .lib-item:last-child { border-radius: 0 0 8px 8px; border-bottom: none; }
+        .lib-title { font-weight: bold; font-size: 1rem; color: #fff; }
+        .lib-year { color: #888; font-size: 0.9rem; }
+        .lib-icon { font-size: 1.2rem; }
+
+    </style>
+</head>
+<body>
+
+    <header><h1>🎬 JellyScanner</h1></header>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('scan')">📸 Scan</button>
+        <button class="tab-btn" onclick="switchTab('manual')">✍️ Check</button>
+        <button class="tab-btn" onclick="switchTab('library')">📚 Search</button>
+    </div>
+
+    <!-- TAB 1: SCANNER VIEW -->
+    <div id="view-scan" class="tab-content active">
+        <div id="result-container">
+            <div id="result" class="neutral">Camera ready...</div>
+        </div>
+        <div class="scanner-wrapper">
+            <video id="video" muted playsinline></video>
+            <div class="scan-overlay"></div>
+        </div>
+        <div class="camera-controls">
+            <select id="sourceSelect" class="cam-select" onchange="changeCamera()"></select>
+            <div class="zoom-control" id="zoomContainer" style="display:none;">
+                <span>🔍</span>
+                <input type="range" id="zoomSlider" min="1" max="10" step="0.1" value="1" oninput="setZoom(this.value)">
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: MANUAL CHECK -->
+    <div id="view-manual" class="tab-content">
+        <div style="padding: 10px 20px;">
+             <div id="manual-result" class="neutral" style="padding:15px; border-radius:8px; margin-bottom:20px;">Ready for check</div>
+        </div>
+
+        <div class="input-group">
+            <label>Enter Barcode:</label>
+            <input type="text" id="manualBarcode" inputmode="numeric" pattern="[0-9]*" placeholder="123456...">
+            <button class="action-btn" onclick="sendManualBarcode()">Check Barcode</button>
+        </div>
+        <!--<hr style="border-color: #333; margin: 30px 0;">
+        <div class="input-group">
+            <label>Check Movie Title:</label>
+            <input type="text" id="manualTitle" placeholder="e.g. Matrix">
+            <button class="action-btn" onclick="sendManualTitle()">Check Title</button>
+        </div>
+        -->
+    </div>
+    
+
+    <!-- TAB 3: LIBRARY SEARCH -->
+    <div id="view-library" class="tab-content">
+        <div class="input-group" style="margin-top: 0;">
+            <label>Search Jellyfin Collection:</label>
+            <div style="display:flex; gap:10px;">
+                <input type="search" id="libSearchInput" placeholder="Search term..." onkeyup="if(event.key === 'Enter') searchLibrary()">
+                <button class="action-btn" style="width: auto; margin-top:0;" onclick="searchLibrary()">🔍</button>
+            </div>
+        </div>
+        <div id="library-results" class="lib-result-list">
+            <!-- Results will be injected here -->
+        </div>
+    </div>
+
+    <script type="module">
+        import { BrowserMultiFormatReader } from 'https://esm.sh/@zxing/library';
+
+        const codeReader = new BrowserMultiFormatReader();
+        let selectedDeviceId;
+        const video = document.getElementById('video');
+        const zoomSlider = document.getElementById('zoomSlider');
+        const zoomContainer = document.getElementById('zoomContainer');
+        let currentTrack = null;
+
+        // --- TAB LOGIC ---
+        window.switchTab = function(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            // Highlight buttons based on index
+            const index = ['scan', 'manual', 'library'].indexOf(tabName);
+            document.querySelectorAll('.tab-btn')[index].classList.add('active');
+
+            if (tabName === 'scan') {
+                document.getElementById('view-scan').classList.add('active');
+                startCamera(selectedDeviceId);
+            } else {
+                document.getElementById('view-' + tabName).classList.add('active');
+                stopCamera();
+            }
+        };
+
+        // --- CAMERA LOGIK ---
+        async function startCamera(deviceId = null) {
+            try {
+                const constraints = {
+                    video: {
+                        deviceId: deviceId ? { exact: deviceId } : undefined,
+                        facingMode: deviceId ? undefined : { ideal: 'environment' },
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 },
+                        focusMode: { ideal: 'continuous' }
+                    }
+                };
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                // Start ZXing decoding
+                await codeReader.decodeFromStream(stream, video, (result, err) => {
+                    if (result) handleScan(result.text);
+                });
+
+                const track = stream.getVideoTracks()[0];
+                currentTrack = track;
+                const capabilities = track.getCapabilities();
+
+                // Initialize camera list if empty
+                if (document.getElementById('sourceSelect').options.length === 0) listCameras();
+                
+                // Handle Zoom capabilities
+                if (capabilities.zoom) {
+                    zoomContainer.style.display = 'flex';
+                    zoomSlider.min = capabilities.zoom.min;
+                    zoomSlider.max = capabilities.zoom.max;
+                    zoomSlider.step = capabilities.zoom.step;
+                    zoomSlider.value = capabilities.zoom.min;
+                } else {
+                    zoomContainer.style.display = 'none';
+                }
+            } catch (err) {
+                console.error("Camera error:", err);
+            }
+        }
+
+        window.setZoom = function(value) {
+            if (currentTrack) currentTrack.applyConstraints({ advanced: [{ zoom: value }] });
+        }
+
+        async function listCameras() {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(device => device.kind === 'videoinput');
+            const select = document.getElementById('sourceSelect');
+            select.innerHTML = '';
+            
+            videoDevices.forEach((device, index) => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                option.text = device.label || `Camera ${index + 1}`;
+                select.appendChild(option);
+            });
+
+            // Set current camera as selected in dropdown
+            if (currentTrack) {
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].text === currentTrack.label) { select.selectedIndex = i; break; }
+                }
+            }
+        }
+
+        window.changeCamera = function() {
+            const select = document.getElementById('sourceSelect');
+            selectedDeviceId = select.value;
+            codeReader.reset();
+            startCamera(selectedDeviceId);
+        }
+
+        function stopCamera() { codeReader.reset(); }
+
+        // --- SCAN & CHECK LOGIC ---
+        function handleScan(code) {
+            // Play confirmation beep
+            new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play().catch(e=>{});
+            
+            stopCamera(); 
+            updateResultBox('result', 'neutral', '⏳ Checking...');
+            
+            fetch('/check-barcode', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ barcode: code })
+            })
+            .then(res => res.json())
+            .then(data => {
+                showCheckResult(data, 'result');
+                // Auto-restart camera after 4 seconds if still in scan tab
+                if (document.getElementById('view-scan').classList.contains('active')) {
+                    setTimeout(() => startCamera(selectedDeviceId), 4000);
+                }
+            });
+        }
+
+        window.sendManualBarcode = function() {
+            const code = document.getElementById('manualBarcode').value;
+            if(!code) return;
+            updateResultBox('manual-result', 'neutral', '⏳ Checking Barcode...');
+            fetch('/check-barcode', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ barcode: code })
+            }).then(res => res.json()).then(data => showCheckResult(data, 'manual-result'));
+        }
+
+        window.sendManualTitle = function() {
+            const title = document.getElementById('manualTitle').value;
+            if(!title) return;
+            updateResultBox('manual-result', 'neutral', '⏳ Searching Title...');
+            fetch('/check-title', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: title })
+            }).then(res => res.json()).then(data => showCheckResult(data, 'manual-result'));
+        }
+
+        function updateResultBox(id, className, html) {
+            const el = document.getElementById(id);
+            el.className = className;
+            el.innerHTML = html;
+        }
+
+        function showCheckResult(data, elementId) {
+            if (!data.found) {
+                updateResultBox(elementId, 'neutral', '❌ Nothing found.');
+            } else if (data.inCollection) {
+                updateResultBox(elementId, 'success', `✅ IN COLLECTION<br><span style="font-size:0.8em">${data.title} (${data.year || ''})</span>`);
+            } else {
+                updateResultBox(elementId, 'missing', `❌ MISSING<br><span style="font-size:0.8em">${data.title}</span>`);
+            }
+        }
+
+        // --- LIBRARY SEARCH LOGIC ---
+        window.searchLibrary = function() {
+            const term = document.getElementById('libSearchInput').value.trim();
+            if(!term) return;
+            
+            const container = document.getElementById('library-results');
+            container.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">Loading...</div>';
+
+            fetch('/search-collection', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ term: term })
+            })
+            .then(res => res.json())
+            .then(items => {
+                container.innerHTML = '';
+                if(items.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; padding:20px;">No matches found.</div>';
+                    return;
+                }
+                
+                // Show result count
+                const countDiv = document.createElement('div');
+                countDiv.style.padding = "5px 10px";
+                countDiv.style.color = "#888";
+                countDiv.style.fontSize = "0.8rem";
+                countDiv.textContent = `${items.length} results`;
+                container.appendChild(countDiv);
+
+                items.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'lib-item';
+                    div.innerHTML = `
+                        <div>
+                            <div class="lib-title">${item.title}</div>
+                            <div class="lib-year">${item.year || ''}</div>
+                        </div>
+                        <div class="lib-icon">✅</div>
+                    `;
+                    container.appendChild(div);
+                });
+            });
+        }
+
+        // Start camera on initial load
+        startCamera();
+    </script>
+</body>
+</html>
