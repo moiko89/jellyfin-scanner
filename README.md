@@ -26,7 +26,7 @@ JELLYFIN_URL=http://your-ip:8096
 JELLYFIN_API_KEY=your_jellyfin_key
 TMDB_API_KEY=your_tmdb_key
 TMDB_LANG=de-DE #en-US
-JUNK_KEYWORDS=/(\[.*?\]|\(.*?\)|1080p|720p|WEB-DL|x264|x265)/gi
+JUNK_KEYWORDS=deluxe|ext|fan|edition|steelbook|collector|collection|remastered|extended|cut|uncut|version|box|set|limitierte|limited|special|jubiläums|bluray|blu-ray|dvd
 PORT=3000
 ```
 
