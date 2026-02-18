@@ -1,6 +1,7 @@
 # Jellyfin Media Scanner
 
 A lightweight Node.js application to quickly trigger library scans on your Jellyfin server.
+
 <img width="378" height="603" alt="grafik" src="https://github.com/user-attachments/assets/204d7dc1-21b9-4b96-8d3f-c658d3d6878e" />
 
 ## Features
