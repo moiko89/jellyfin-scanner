@@ -1,0 +1,17 @@
+services:
+  jellyfin-scanner:
+    build: .
+    container_name: jellyfin-scanner
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./.env:/app/.env
+    networks:
+      - jellyfin-network
+
+networks:
+  jellyfin-network:
+    driver: bridge
